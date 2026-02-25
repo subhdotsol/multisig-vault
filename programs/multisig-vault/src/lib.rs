@@ -2,9 +2,11 @@ use anchor_lang::prelude::*;
 
 pub mod errors;
 pub mod events;
+pub mod instructions;
 pub mod state;
 pub mod utils;
 
+pub use instructions::*;
 pub use state::*;
 pub use utils::helper::{derive_proposal_pda, derive_vault_pda, is_threshold_met, transfer_sol};
 

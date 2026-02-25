@@ -14,3 +14,27 @@ describe("multisig-vault", () => {
     console.log("Your transaction signature", tx);
   });
 });
+
+// test cases to cover 
+
+// Initialization
+// - Vault created
+// - Owners stored
+// - Threshold stored
+
+// Proposal Creation
+// - Proposal PDA derived correctly
+// - Stores amount & recipient
+
+// Approval Flow
+// - Owner can approve
+// - Non-owner cannot approve ❌
+// - Double approval blocked ❌
+
+// Execution
+// - Execution fails if approvals < threshold ❌
+// - Execution succeeds when threshold met ✅
+// - Execution cannot run twice ❌
+
+// Edge Case
+// - Proposal fails if vault balance insufficient

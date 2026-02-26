@@ -12,3 +12,57 @@
 //    - Proposal PDA
 //    - Recipient account
 //    - System Program
+
+use anchor_lang::prelude::*;
+
+use crate::{
+    errors::VaultError, events::ProposalExecuted, is_threshold_met, transfer_sol, Proposal, Vault,
+};
+
+#[derive(Accounts)]
+pub struct ExecuteProposal<'info> {
+    pub executor: Signer<'info>,
+
+    #[account(mut)]
+    pub vault: Account<'info, Vault>,
+
+    #[account(mut)]
+    pub proposal: Account<'info, Proposal>,
+
+    ///CHECK : recipient is valid
+    #[account(mut)]
+    pub recipient: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+impl<'info> ExecuteProposal<'info> {
+    pub fn execute(&mut self) -> Result<()> {
+        require!(!self.proposal.executed, VaultError::ProposalAlreadyExecuted);
+        require!(
+            self.vault.to_account_info().lamports() >= self.proposal.amount,
+            VaultError::InsufficientFunds
+        );
+        require!(
+            is_threshold_met(&self.vault, &self.proposal),
+            VaultError::NotEnoughApprovals
+        );
+
+        transfer_sol(
+            &self.vault.to_account_info(),
+            &self.recipient,
+            self.proposal.amount,
+            &self.system_program.to_account_info(),
+        )?;
+
+        self.proposal.executed = true;
+
+        emit!(ProposalExecuted {
+            vault: self.vault.key(),
+            proposal: self.proposal.key(),
+            executor: self.executor.key(),
+            amount: self.proposal.amount,
+            recipient: self.recipient.key(),
+        });
+        Ok(())
+    }
+}

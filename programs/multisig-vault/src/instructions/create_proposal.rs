@@ -19,3 +19,28 @@
 //    - Vault PDA
 //    - Proposal PDA (created)
 //    - System Program
+
+use crate::{Proposal, Vault};
+use anchor_lang::prelude::*;
+
+#[derive(Accounts)]
+pub struct CreateProposal<'info> {
+    #[account(mut)]
+    pub creator: Signer<'info>,
+    #[account(mut)]
+    pub vault: Account<'info, Vault>,
+    #[account(
+        init,
+        payer = creator,
+        space = 8+190,
+        seeds = [
+            b"proposal",
+            vault.key().as_ref(),
+            &vault.proposal_count.to_le_bytes(),
+        ],
+        bump,
+    )]
+    pub proposal: Account<'info, Proposal>,
+
+    pub system_program: Program<'info, System>,
+}

@@ -63,8 +63,30 @@ describe("multisig-vault", () => {
         // );
     });
 
-  it("Is initialized!", async () => {
+  it("Initialize Vault", async () => {
+    const tx = await program.methods.initializeVault(
+        [owner1.publicKey, owner2.publicKey, owner3.publicKey],
+        threshold
+    ).accounts({
+        authority: authority.publicKey,
+        vault: vaultPda,
+        systemProgram: SystemProgram.programId,
+    }).transaction();
 
+    tx.recentBlockhash = svm.latestBlockhash();
+    tx.feePayer = authority.publicKey;
+    tx.sign(authority);
+
+    const res = svm.sendTransaction(tx);
+    if ("err" in res) throw new Error(res.err.toString()); 
+
+    const vaultAcc = svm.getAccount(vaultPda); 
+    assert.ok(vaultAcc , "vault should exist"); 
+
+    const decoded = program.coder.accounts.decode("vault" , Buffer.from(vaultAcc.data)); 
+    
+    assert.equal(decoded.threshold , threshold); 
+    assert.equal(decoded.owners.length , 3);
 
   });
 });

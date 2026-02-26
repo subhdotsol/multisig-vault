@@ -107,3 +107,11 @@
 [2026-02-26--09-09-49 INFO actix_web::middleware::logger] 127.0.0.1 "GET /_next/static/chunks/8399.17bb4f3c1f0e0d22.js HTTP/1.1" 200 59142 "http://127.0.0.1:18488/_next/static/chunks/9999.292dc24b7a416ca0.js" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" 0.004786
 [2026-02-26--09-09-49 INFO actix_web::middleware::logger] 127.0.0.1 "GET /_next/static/chunks/4423.ec00f67013ced4e9.js HTTP/1.1" 200 23708 "http://127.0.0.1:18488/_next/static/chunks/9999.292dc24b7a416ca0.js" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" 0.002205
 [2026-02-26--09-09-49 INFO actix_web::middleware::logger] 127.0.0.1 "GET /_next/static/chunks/6138.8f1b0602bb5e6f58.js HTTP/1.1" 200 40973 "http://127.0.0.1:18488/_next/static/chunks/9999.292dc24b7a416ca0.js" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" 0.003160
+[2026-02-26--09-38-53 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57100.
+[2026-02-26--09-39-34 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57125.
+[2026-02-26--09-40-29 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57210.
+[2026-02-26--09-41-16 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57274.
+[2026-02-26--09-43-03 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57331.
+[2026-02-26--09-43-13 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57340.
+[2026-02-26--09-44-02 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57367.
+[2026-02-26--09-44-18 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57375.

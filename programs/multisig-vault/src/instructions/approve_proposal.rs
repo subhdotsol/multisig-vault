@@ -32,11 +32,11 @@ impl<'info> ApproveProposal<'info> {
     pub fn approve(&mut self) -> Result<()> {
         require!(!self.proposal.executed, VaultError::ProposalAlreadyExecuted);
         require!(
-            !is_owner(&self.vault, &self.approver.key()),
+            is_owner(&self.vault, &self.approver.key()),
             VaultError::NotAnOwner
         );
         require!(
-            has_already_approved(&self.proposal, &self.approver.key()),
+            !has_already_approved(&self.proposal, &self.approver.key()),
             VaultError::AlreadyApproved
         );
 

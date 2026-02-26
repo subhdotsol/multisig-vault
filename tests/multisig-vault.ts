@@ -57,10 +57,8 @@ describe("multisig-vault", () => {
             programId
         );
 
-        // [proposalPda] = PublicKey.findProgramAddressSync(
-        //     [Buffer.from("proposal"), vaultPda.toBuffer(), Buffer.from(proposalCount.toString())],
-        //     programId
-        // );
+        // The user manually modified this earlier, but create_proposal.rs still expects proposalCount.
+        // We defer deriving proposalPda to the exact tests where proposalCount is known.
     });
 
   it("Initialize Vault", async () => {
@@ -78,7 +76,7 @@ describe("multisig-vault", () => {
     tx.sign(authority);
 
     const res = svm.sendTransaction(tx);
-    if ("err" in res) throw new Error(res.err.toString()); 
+    if ("err" in res) throw new Error(JSON.stringify((res as any).err));
 
     const vaultAcc = svm.getAccount(vaultPda); 
     assert.ok(vaultAcc , "vault should exist"); 
@@ -99,16 +97,145 @@ describe("multisig-vault", () => {
           systemProgram: SystemProgram.programId,
       }).transaction();
 
-      tx.recentBlockhash = svm.latestBlockhash().toString();
+      tx.recentBlockhash = svm.latestBlockhash();
       tx.feePayer = authority.publicKey;
       tx.sign(authority);
 
       const res = svm.sendTransaction(tx);
-      if ("err" in res) throw new Error(res.err.toString()); 
+      if ("err" in res) throw new Error(JSON.stringify((res as any).err));
 
       const vaultAcc = svm.getAccount(vaultPda);
       assert.ok(vaultAcc.lamports >= depositAmount.toNumber());
   });
+
+  it("Create Proposal", async () => {
+      const vaultAccPre = svm.getAccount(vaultPda);
+      const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
+      const proposalCount = decodedVault.proposalCount;
+      
+      const [proposalPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("proposal"), vaultPda.toBuffer(), new anchor.BN(proposalCount).toArrayLike(Buffer, "le", 8)],
+          programId
+      );
+
+      const tx = await program.methods.createProposal(
+          owner1.publicKey,
+          proposalAmount
+      ).accounts({
+          creator: owner1.publicKey,
+          vault: vaultPda,
+          // @ts-ignore
+          proposal: proposalPda,
+          systemProgram: SystemProgram.programId,
+      }).transaction();
+
+      tx.recentBlockhash = svm.latestBlockhash();
+      tx.feePayer = owner1.publicKey;
+      tx.sign(owner1);
+
+      const res = svm.sendTransaction(tx);
+      // @ts-ignore
+      if (res.meta?.err || res.err) throw new Error("Transaction failed");
+
+      const proposalAcc = svm.getAccount(proposalPda);
+      assert.ok(proposalAcc , "proposal should exist"); 
+
+      const decoded = program.coder.accounts.decode("proposal" , Buffer.from(proposalAcc.data)); 
+      
+      assert.equal(decoded.amount.toNumber() , proposalAmount.toNumber());
+      assert.equal(decoded.recipient.toBase58() , owner1.publicKey.toBase58());
+  });
+
+
+    it("Owner can approve", async () => {
+      const vaultAccPre = svm.getAccount(vaultPda);
+      const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
+      // Proposal count was incremented in an earlier test, so the created proposal corresponds to ID = count - 1
+      const proposalId = decodedVault.proposalCount.toNumber() - 1;
+      
+      const [proposalPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("proposal"), vaultPda.toBuffer(), new anchor.BN(proposalId).toArrayLike(Buffer, "le", 8)],
+          programId
+      );
+
+      const tx = await program.methods
+        .approveProposal()
+        .accounts({
+        approver: owner1.publicKey,
+        vault: vaultPda,
+        proposal: proposalPda,
+      })
+      .transaction();
+
+    tx.recentBlockhash = svm.latestBlockhash();
+    tx.feePayer = owner1.publicKey;
+    tx.sign(owner1);
+
+    const res = svm.sendTransaction(tx);
+    // @ts-ignore
+    if (res.meta?.err || res.err) {
+        console.log("Tx Result:", JSON.stringify(res, (k,v) => typeof v === 'bigint' ? v.toString() : v, 2));
+        throw new Error("Transaction failed");
+    }
+  });
+
+  it("Blocks double approval", async () => {
+      const vaultAccPre = svm.getAccount(vaultPda);
+      const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
+      const proposalId = decodedVault.proposalCount.toNumber() - 1;
+      
+      const [proposalPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("proposal"), vaultPda.toBuffer(), new anchor.BN(proposalId).toArrayLike(Buffer, "le", 8)],
+          programId
+      );
+
+      const tx = await program.methods
+        .approveProposal()
+        .accounts({
+        approver: owner1.publicKey,
+        vault: vaultPda,
+        proposal: proposalPda,
+      })
+      .transaction();
+
+    tx.recentBlockhash = svm.latestBlockhash();
+    tx.feePayer = owner1.publicKey;
+    tx.sign(owner1);
+
+    const res = svm.sendTransaction(tx);
+    assert.ok("err" in res, "Should fail double approval");
+  });
+
+  it("Non-owner cannot approve", async () => {
+      const vaultAccPre = svm.getAccount(vaultPda);
+      const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
+      const proposalId = decodedVault.proposalCount.toNumber() - 1;
+      
+      const [proposalPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("proposal"), vaultPda.toBuffer(), new anchor.BN(proposalId).toArrayLike(Buffer, "le", 8)],
+          programId
+      );
+
+      const fake = Keypair.generate();
+      svm.airdrop(fake.publicKey, BigInt(1_000_000_000));
+
+      const tx = await program.methods
+        .approveProposal()
+        .accounts({
+        approver: fake.publicKey,
+        vault: vaultPda,
+        proposal: proposalPda,
+      })
+      .transaction();
+
+    tx.recentBlockhash = svm.latestBlockhash();
+    tx.feePayer = fake.publicKey;
+    tx.sign(fake);
+
+    const res = svm.sendTransaction(tx);
+    assert.ok("err" in res, "Non-owner should fail");
+  });
+
 });
 
 // test cases to cover 

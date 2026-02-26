@@ -1,247 +1,48 @@
 # Multi-Sig Vault (Anchor Program)
 
-A Solana smart contract built with Anchor implementing an M-of-N Multi-Signature Treasury Vault.
+> **Devnet Deployment:** [`AWoWjVRjYL5QoEizQJoh6UKTT8ZFLsL9E8Vg9L8GVkSi`](https://explorer.solana.com/address/AWoWjVRjYL5QoEizQJoh6UKTT8ZFLsL9E8Vg9L8GVkSi?cluster=devnet)
 
-Funds stored in the vault can only be withdrawn when a minimum number of registered founders approve a withdrawal proposal.
+A robust Solana smart contract built with the Anchor framework, implementing an M-of-N Multi-Signature Treasury Vault. This program ensures secure treasury management by requiring a predefined threshold of registered owners to approve any withdrawal proposals before funds can be transferred.
 
-# Overview
+## Test Coverage & Results
 
-This program demonstrates:
+The smart contract is fully covered by an extensive integration test suite, validating all core constraints and security conditions.
 
-- Anchor framework usage
-- Program Derived Addresses (PDAs)
-- Custom constraint logic with M-of-N approval system
-- Secure treasury management
-- Full state lifecycle management
+![Test Results](./test-results.png)
 
-The vault enforces decentralized fund control by requiring multiple approvals before any withdrawal can occur.
+## Features & Architecture
 
-# Purpose
+- **Program Derived Addresses (PDAs):** Securely manages Vault and Proposal states without requiring private keys.
+- **M-of-N Approval Constraint:** Withdrawals execute only if `approval_count >= threshold`.
+- **Double-Approval Prevention:** Cryptographically prevents founders from approving the same proposal twice.
+- **Strict Owner-Only Access:** Only registered owners can create or approve proposals.
+- **State Lifecycle:** Complete lifecycle management from vault initialization to proposal execution.
 
-The vault simulates a shared treasury controlled by multiple founders.
+## Smart Contract Instructions
 
-A withdrawal can only execute if `approval_count >= threshold`, preventing unilateral fund access and increasing security.
+1. **`initialize_vault`**: Creates the vault PDA, registers the owner public keys, and sets the required approval threshold.
+2. **`deposit`**: Allows any user to seamlessly fund the vault treasury.
+3. **`create_proposal`**: Enables a registered owner to propose a withdrawal to a designated recipient. 
+4. **`approve_proposal`**: Allows other founders to sign and approve an active proposal.
+5. **`execute_proposal`**: Triggers the exact transfer of SOL to the recipient once the approval threshold is securely met.
 
-# Real-World Example
+## State Accounts
 
-Consider a startup with three founders: Alice, Bob, and Charlie.
+### Vault Account (PDA)
+Maintains the core configuration:
+- `authority`: The creator of the vault.
+- `owners`: Array of authorized founder public keys.
+- `threshold`: The minimum number of approvals required for execution.
+- `proposal_count`: Auto-incrementing identifier for subsequent proposals.
 
-They create a treasury vault with:
+### Proposal Account (PDA)
+Tracks individual withdrawal requests:
+- `recipient` & `amount`: The target destination and requested SOL.
+- `approvals`: Array of founders who have already signed the proposal.
+- `executed`: Boolean flag preventing re-execution of completed transfers.
 
-- Owners = [Alice, Bob, Charlie]
-- Threshold = 2
+## Security Considerations
 
-If a withdrawal of 5 SOL is proposed:
-
-- At least 2 founders must approve
-- One founder alone cannot withdraw funds
-
-This prevents rogue behavior, compromised wallet access, and accidental transfers.
-
-# Architecture
-
-The program consists of:
-
-- One program
-- Two PDA accounts
-- Three founder signers
-- System program
-- Recipient account
-
-# On-Chain State
-
-## Vault Account (PDA)
-
-**Purpose**  
-Stores treasury configuration and holds SOL.
-
-**Stored Fields**
-
-- authority: creator of the vault
-- owners: vector of founder public keys
-- threshold: minimum approvals required
-- proposal_count: incrementing identifier
-- bump
-
-Holds SOL: Yes
-
-## Proposal Account (PDA)
-
-Created for each withdrawal request.
-
-**Stored Fields**
-
-- vault: parent vault reference
-- proposal_id
-- recipient
-- amount
-- approvals: vector of approving founders
-- executed: boolean
-- bump
-
-Holds SOL: No  
-Tracks only approval state.
-
-# Unique Constraint Logic
-
-Withdrawal execution requires:
-
-1. Proposal has not been executed
-2. `approvals.len() >= threshold`
-3. Each approval is from a registered owner
-4. Each owner can approve only once
-5. Vault has sufficient balance
-
-This enforces decentralized control.
-
-# Instructions
-
-The program contains five instructions.
-
-## Initialize Vault
-
-Creates the vault PDA.
-
-**Validations**
-
-- Threshold must be greater than zero
-- Threshold must be less than or equal to number of owners
-- Owners must be unique
-
-**Accounts**
-
-- Initializer (Signer)
-- Vault PDA (created)
-- System Program
-
-## Deposit
-
-Transfers SOL into the vault.
-
-**Who Can Deposit**  
-Anyone
-
-**Accounts**
-
-- Depositor (Signer)
-- Vault PDA
-- System Program
-
-## Create Proposal
-
-Creates a withdrawal request.
-
-**Validations**
-
-- Caller must be a registered owner
-- Amount must be greater than zero
-- Vault balance must be greater than or equal to amount
-
-**Accounts**
-
-- Creator (Signer)
-- Vault PDA
-- Proposal PDA (created)
-- System Program
-
-## Approve Proposal
-
-Adds founder approval to a proposal.
-
-**Validations**
-
-- Signer must be a registered owner
-- Proposal not executed
-- Signer has not already approved
-
-**Accounts**
-
-- Approver (Signer)
-- Vault PDA
-- Proposal PDA
-
-## Execute Proposal
-
-Transfers SOL after sufficient approvals.
-
-**Validations**
-
-- Proposal not executed
-- Approvals meet or exceed threshold
-- Vault balance is sufficient
-
-**Accounts**
-
-- Executor (Signer)
-- Vault PDA
-- Proposal PDA
-- Recipient
-- System Program
-
-# End-to-End Flow Example
-
-1. Initialize vault with three owners and threshold of two.
-2. Deposit 10 SOL; vault balance becomes 10 SOL.
-3. Create a withdrawal proposal of 5 SOL; approvals = [], executed = false.
-4. Bob approves → approvals = [Bob]; Charlie approves → approvals = [Bob, Charlie].
-5. Execute proposal; funds transferred; vault balance = 5 SOL; proposal marked executed.
-6. Re-execution attempt fails because executed = true.
-
-# Account Summary
-
-| Account        | Type          | Signs? |
-|----------------|---------------|--------|
-| Founder 1      | Keypair       | Yes    |
-| Founder 2      | Keypair       | Yes    |
-| Founder 3      | Keypair       | Yes    |
-| Vault PDA      | PDA           | No     |
-| Proposal PDA   | PDA           | No     |
-| Recipient      | System Account| No     |
-| System Program | Program       | No     |
-
-# Security Considerations
-
-- Prevent double approvals
-- Prevent proposal re-execution
-- Enforce owner-only approvals
-- Ensure threshold requirement
-- Validate sufficient vault balance
-- Limit approval vector growth
-
-# Required Test Cases
-
-**Initialization**
-
-- Correct owners stored
-- Threshold stored
-- Fail if threshold exceeds number of owners
-
-**Deposit**
-
-- Balance increases
-
-**Proposal Creation**
-
-- Owner can create
-- Non-owner cannot create
-
-**Approval**
-
-- Owner can approve
-- Non-owner cannot approve
-- Double approval fails
-
-**Execution**
-
-- Fails if approvals are below threshold
-- Succeeds if approvals meet or exceed threshold
-- Fails if executed twice
-- Fails if insufficient balance
-
-# Deployment (Devnet)
-
-```bash
-solana config set --url devnet
-anchor build
-anchor deploy
-anchor test --provider.cluster devnet
+- Proposals cannot be executed more than once (`executed` flag).
+- Withdrawals strictly revert if the vault possesses insufficient SOL.
+- Fully decentralized control prevents single-point-of-failure vulnerabilities.

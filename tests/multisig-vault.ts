@@ -89,6 +89,26 @@ describe("multisig-vault", () => {
     assert.equal(decoded.owners.length , 3);
 
   });
+
+  it("Deposit SOL to Vault", async () => {
+      const tx = await program.methods.depositVault(
+          depositAmount
+      ).accounts({
+          depositor: authority.publicKey,
+          vault: vaultPda,
+          systemProgram: SystemProgram.programId,
+      }).transaction();
+
+      tx.recentBlockhash = svm.latestBlockhash().toString();
+      tx.feePayer = authority.publicKey;
+      tx.sign(authority);
+
+      const res = svm.sendTransaction(tx);
+      if ("err" in res) throw new Error(res.err.toString()); 
+
+      const vaultAcc = svm.getAccount(vaultPda);
+      assert.ok(vaultAcc.lamports >= depositAmount.toNumber());
+  });
 });
 
 // test cases to cover 

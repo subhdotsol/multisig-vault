@@ -115,3 +115,5 @@
 [2026-02-26--09-43-13 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57340.
 [2026-02-26--09-44-02 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57367.
 [2026-02-26--09-44-18 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57375.
+[2026-02-26--09-49-51 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57663.
+[2026-02-26--09-50-52 INFO parity_ws::io] Accepted a new tcp connection from 127.0.0.1:57693.

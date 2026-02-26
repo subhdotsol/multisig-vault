@@ -305,7 +305,11 @@ describe("multisig-vault", () => {
     executeTx.sign(owner2);
 
     const res = svm.sendTransaction(executeTx);
-    if ("err" in res) throw new Error(res.err.toString());
+    // @ts-ignore
+    if (res.meta?.err || res.err) {
+        console.log("Tx Result:", JSON.stringify(res, (k,v) => typeof v === 'bigint' ? v.toString() : v, 2));
+        throw new Error("Transaction failed");
+    }
 
     const proposalAcc = svm.getAccount(proposalPda);
     const decoded = program.coder.accounts.decode(

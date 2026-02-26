@@ -15,9 +15,7 @@
 
 use anchor_lang::prelude::*;
 
-use crate::{
-    errors::VaultError, events::ProposalExecuted, is_threshold_met, transfer_sol, Proposal, Vault,
-};
+use crate::{errors::VaultError, events::ProposalExecuted, is_threshold_met, Proposal, Vault};
 
 #[derive(Accounts)]
 pub struct ExecuteProposal<'info> {
@@ -47,12 +45,8 @@ impl<'info> ExecuteProposal<'info> {
             VaultError::NotEnoughApprovals
         );
 
-        transfer_sol(
-            &self.vault.to_account_info(),
-            &self.recipient,
-            self.proposal.amount,
-            &self.system_program.to_account_info(),
-        )?;
+        **self.vault.to_account_info().try_borrow_mut_lamports()? -= self.proposal.amount;
+        **self.recipient.try_borrow_mut_lamports()? += self.proposal.amount;
 
         self.proposal.executed = true;
 

@@ -20,7 +20,9 @@
 //    - Proposal PDA (created)
 //    - System Program
 
-use crate::{Proposal, Vault};
+use crate::{
+    errors::VaultError, events::ProposalCreated, utils::helper::is_owner, Proposal, Vault,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -43,4 +45,42 @@ pub struct CreateProposal<'info> {
     pub proposal: Account<'info, Proposal>,
 
     pub system_program: Program<'info, System>,
+}
+
+impl<'info> CreateProposal<'info> {
+    pub fn create(
+        &mut self,
+        recipient: Pubkey,
+        amount: u64,
+        bumps: &CreateProposalBumps,
+    ) -> Result<()> {
+        require!(
+            is_owner(&self.vault, &self.creator.key()),
+            VaultError::NotAnOwner
+        );
+        require!(amount > 0, VaultError::InvalidProposalAmount);
+        require!(
+            self.vault.to_account_info().lamports() >= amount,
+            VaultError::InsufficientFunds
+        );
+
+        self.proposal.vault = self.vault.key();
+        self.proposal.proposal_id = self.vault.proposal_count;
+        self.proposal.recipient = recipient;
+        self.proposal.amount = amount;
+        self.proposal.approvals = Vec::new();
+        self.proposal.executed = false;
+        self.proposal.bump = bumps.proposal;
+
+        self.vault.proposal_count += 1;
+
+        emit!(ProposalCreated {
+            vault: self.vault.key(),
+            proposal: self.proposal.key(),
+            creator: self.creator.key(),
+            recipient,
+            amount,
+        });
+        Ok(())
+    }
 }

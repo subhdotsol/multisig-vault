@@ -8,7 +8,8 @@ A robust Solana smart contract built with the Anchor framework, implementing an 
 
 The smart contract is fully covered by an extensive integration test suite, validating all core constraints and security conditions.
 
-![Test Results](./test-results.png)
+<img width="454" height="277" alt="Screenshot 2026-02-26 at 12 41 40 PM" src="https://github.com/user-attachments/assets/d983e580-4533-4d76-914f-4dbcf1b5f64c" />
+
 
 ## Features & Architecture
 

@@ -12,11 +12,10 @@ describe("multisig-vault", () => {
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
 
-    const program = anchor.workspace.vaultTurbin as Program<VaultTurbin>;
+    const program = anchor.workspace.multisigVault as Program<MultisigVault>;
     const programId = program.programId;
 
     let svm: LiteSVM;
-    let payer: Keypair;
 
     // Planning all the needed accounts
     let authority : Keypair; 
@@ -36,23 +35,37 @@ describe("multisig-vault", () => {
         svm = new LiteSVM();
 
         const programParams = {
-            path: path.resolve(__dirname, "../target/deploy/vault_turbin.so"),
+            path: path.resolve(__dirname, "../target/deploy/multisig_vault.so"),
             programId: programId
         };
+        
         svm.addProgramFromFile(programParams.programId, programParams.path);
 
-        payer = Keypair.generate();
-        svm.airdrop(payer.publicKey, 10_000_000_000n); // 10 SOL
+        // generating the accounts needed
+        authority = Keypair.generate();
+        owner1 = Keypair.generate();
+        owner2 = Keypair.generate();
+        owner3 = Keypair.generate();
 
-        vaultKeypair = Keypair.generate();
+        svm.airdrop(authority.publicKey, BigInt(10000000000)); // 10 SOL
+        svm.airdrop(owner1.publicKey, BigInt(10000000000)); // 10 SOL
+        svm.airdrop(owner2.publicKey, BigInt(10000000000)); // 10 SOL
+        svm.airdrop(owner3.publicKey, BigInt(10000000000)); // 10 SOL
+
+        [vaultPda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("vault"), authority.publicKey.toBuffer()],
+            programId
+        );
+
+        // [proposalPda] = PublicKey.findProgramAddressSync(
+        //     [Buffer.from("proposal"), vaultPda.toBuffer(), Buffer.from(proposalCount.toString())],
+        //     programId
+        // );
     });
 
   it("Is initialized!", async () => {
 
 
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
   });
 });
 

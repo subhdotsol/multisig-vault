@@ -236,6 +236,85 @@ describe("multisig-vault", () => {
     assert.ok("err" in res, "Non-owner should fail");
   });
 
+
+  it("Fails execution before threshold", async () => {
+    const vaultAccPre = svm.getAccount(vaultPda);
+      const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
+      const proposalId = decodedVault.proposalCount.toNumber() - 1;
+      
+      const [proposalPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("proposal"), vaultPda.toBuffer(), new anchor.BN(proposalId).toArrayLike(Buffer, "le", 8)],
+          programId
+      );
+    const tx = await program.methods
+      .executeProposal()
+      .accounts({
+        executor: owner1.publicKey,
+        vault: vaultPda,
+        proposal: proposalPda,
+        recipient: owner3.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    tx.recentBlockhash = svm.latestBlockhash().toString();
+    tx.feePayer = owner1.publicKey;
+    tx.sign(owner1);
+
+    const res = svm.sendTransaction(tx);
+    assert.ok("err" in res, "Should fail due to insufficient approvals");
+  });
+
+  it("Executes when threshold met", async () => {
+    const vaultAccPre = svm.getAccount(vaultPda);
+      const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
+      const proposalId = decodedVault.proposalCount.toNumber() - 1;
+      
+      const [proposalPda] = PublicKey.findProgramAddressSync(
+          [Buffer.from("proposal"), vaultPda.toBuffer(), new anchor.BN(proposalId).toArrayLike(Buffer, "le", 8)],
+          programId
+      );
+    // Second approval
+    const approveTx = await program.methods
+      .approveProposal()
+      .accounts({
+        approver: owner2.publicKey,
+        vault: vaultPda,
+        proposal: proposalPda,
+      })
+      .transaction();
+
+    approveTx.recentBlockhash = svm.latestBlockhash().toString();
+    approveTx.feePayer = owner2.publicKey;
+    approveTx.sign(owner2);
+    svm.sendTransaction(approveTx);
+
+    const executeTx = await program.methods
+      .executeProposal()
+      .accounts({
+        executor: owner2.publicKey,
+        vault: vaultPda,
+        proposal: proposalPda,
+        recipient: owner3.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .transaction();
+
+    executeTx.recentBlockhash = svm.latestBlockhash().toString();
+    executeTx.feePayer = owner2.publicKey;
+    executeTx.sign(owner2);
+
+    const res = svm.sendTransaction(executeTx);
+    if ("err" in res) throw new Error(res.err.toString());
+
+    const proposalAcc = svm.getAccount(proposalPda);
+    const decoded = program.coder.accounts.decode(
+      "proposal",
+      Buffer.from(proposalAcc.data)
+    );
+
+    assert.equal(decoded.executed, true);
+  });
 });
 
 // test cases to cover 

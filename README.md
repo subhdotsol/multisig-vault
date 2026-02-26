@@ -2,7 +2,7 @@
 
 > **Devnet Deployment:** [`AWoWjVRjYL5QoEizQJoh6UKTT8ZFLsL9E8Vg9L8GVkSi`](https://explorer.solana.com/address/AWoWjVRjYL5QoEizQJoh6UKTT8ZFLsL9E8Vg9L8GVkSi?cluster=devnet)
 
-A robust Solana smart contract built with the Anchor framework, implementing an M-of-N Multi-Signature Treasury Vault. This program ensures secure treasury management by requiring a predefined threshold of registered owners to approve any withdrawal proposals before funds can be transferred.
+A Solana smart contract built with the Anchor framework, implementing an M-of-N Multi-Signature Treasury Vault. This program ensures secure treasury management by requiring a predefined threshold of registered owners to approve any withdrawal proposals before funds can be transferred.
 
 ## Test Coverage & Results
 

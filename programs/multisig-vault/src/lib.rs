@@ -14,13 +14,34 @@ declare_id!("AWoWjVRjYL5QoEizQJoh6UKTT8ZFLsL9E8Vg9L8GVkSi");
 
 #[program]
 pub mod multisig_vault {
+
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
-        Ok(())
+    pub fn initialize_vault(
+        ctx: Context<InitializeVault>,
+        owners: Vec<Pubkey>,
+        threshold: u8,
+    ) -> Result<()> {
+        ctx.accounts.initialize(owners, threshold, &ctx.bumps)
+    }
+
+    pub fn deposit_vault(ctx: Context<DepositVault>, amount: u64) -> Result<()> {
+        ctx.accounts.deposit(amount)
+    }
+
+    pub fn create_proposal(
+        ctx: Context<CreateProposal>,
+        recipient: Pubkey,
+        amount: u64,
+    ) -> Result<()> {
+        ctx.accounts.create(recipient, amount, &ctx.bumps)
+    }
+
+    pub fn approve_proposal(ctx: Context<ApproveProposal>) -> Result<()> {
+        ctx.accounts.approve()
+    }
+
+    pub fn execute_proposal(ctx: Context<ExecuteProposal>) -> Result<()> {
+        ctx.accounts.execute()
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}

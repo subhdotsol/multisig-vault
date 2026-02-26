@@ -1,0 +1,45 @@
+
+action "multisig_vault_deposit_event" "svm::deploy_subgraph" {
+    program_id = action.deploy_multisig_vault.program_id
+    program_idl = action.deploy_multisig_vault.program_idl
+    block_height = 0 // action.deploy_multisig_vault.block_height
+    event {
+        name = "DepositEvent"
+    }
+}
+
+action "multisig_vault_proposal_approved" "svm::deploy_subgraph" {
+    program_id = action.deploy_multisig_vault.program_id
+    program_idl = action.deploy_multisig_vault.program_idl
+    block_height = 0 // action.deploy_multisig_vault.block_height
+    event {
+        name = "ProposalApproved"
+    }
+}
+
+action "multisig_vault_proposal_created" "svm::deploy_subgraph" {
+    program_id = action.deploy_multisig_vault.program_id
+    program_idl = action.deploy_multisig_vault.program_idl
+    block_height = 0 // action.deploy_multisig_vault.block_height
+    event {
+        name = "ProposalCreated"
+    }
+}
+
+action "multisig_vault_proposal_executed" "svm::deploy_subgraph" {
+    program_id = action.deploy_multisig_vault.program_id
+    program_idl = action.deploy_multisig_vault.program_idl
+    block_height = 0 // action.deploy_multisig_vault.block_height
+    event {
+        name = "ProposalExecuted"
+    }
+}
+
+action "multisig_vault_vault_initialized" "svm::deploy_subgraph" {
+    program_id = action.deploy_multisig_vault.program_id
+    program_idl = action.deploy_multisig_vault.program_idl
+    block_height = 0 // action.deploy_multisig_vault.block_height
+    event {
+        name = "VaultInitialized"
+    }
+}

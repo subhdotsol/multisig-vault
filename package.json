@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "test": "anchor test --skip-local-validator -- --timeout 100000"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

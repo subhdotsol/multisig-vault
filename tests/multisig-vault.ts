@@ -6,7 +6,8 @@ import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import { assert } from "chai";
 import * as path from "path";
 
-describe("multisig-vault", () => {
+describe("multisig-vault (LiteSVM)", () => {
+  console.log(" Starting LiteSVM Test Suite...");
 
   // Configure the client to use the local cluster
     const provider = anchor.AnchorProvider.env();
@@ -62,6 +63,7 @@ describe("multisig-vault", () => {
     });
 
   it("Initialize Vault", async () => {
+    console.log("Test: Initialize Vault");
     const tx = await program.methods.initializeVault(
         [owner1.publicKey, owner2.publicKey, owner3.publicKey],
         threshold
@@ -89,6 +91,8 @@ describe("multisig-vault", () => {
   });
 
   it("Deposit SOL to Vault", async () => {
+      console.log("Test: Deposit SOL to Vault");
+      console.log(`Depositing ${depositAmount.toNumber() / anchor.web3.LAMPORTS_PER_SOL} SOL...`);
       const tx = await program.methods.depositVault(
           depositAmount
       ).accounts({
@@ -109,6 +113,7 @@ describe("multisig-vault", () => {
   });
 
   it("Create Proposal", async () => {
+      console.log("Test: Create Proposal");
       const vaultAccPre = svm.getAccount(vaultPda);
       const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
       const proposalCount = decodedVault.proposalCount;
@@ -148,6 +153,7 @@ describe("multisig-vault", () => {
 
 
     it("Owner can approve", async () => {
+      console.log("Test: Owner 1 approves");
       const vaultAccPre = svm.getAccount(vaultPda);
       const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
       // Proposal count was incremented in an earlier test, so the created proposal corresponds to ID = count - 1
@@ -266,6 +272,7 @@ describe("multisig-vault", () => {
   });
 
   it("Executes when threshold met", async () => {
+    console.log("Test: Executes when threshold met");
     const vaultAccPre = svm.getAccount(vaultPda);
       const decodedVault = program.coder.accounts.decode("vault", Buffer.from(vaultAccPre.data));
       const proposalId = decodedVault.proposalCount.toNumber() - 1;
